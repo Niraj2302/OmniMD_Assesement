@@ -1,0 +1,52 @@
+services:
+  - type: keyvalue
+    name: sales-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: sales-api
+    runtime: docker
+    plan: free
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: keyvalue
+          name: sales-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: keyvalue
+          name: sales-redis
+          property: connectionString
+    ports:
+      - 8000
+
+  - type: worker
+    name: sales-worker
+    runtime: docker
+    plan: free
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: keyvalue
+          name: sales-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: keyvalue
+          name: sales-redis
+          property: connectionString
+
+  - type: web
+    name: sales-flower
+    runtime: docker
+    plan: free
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: keyvalue
+          name: sales-redis
+          property: connectionString
+    ports:
+      - 5555
